@@ -2,8 +2,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400..700&display=swap" rel="stylesheet">
 
-<p style="font-family: 'Noto Nastaliq Urdu', serif;font-size:80px; text-align:center;">هـ</p><br><br>
-
+<div align="center">
+  <h1 style="font-size: 7em;font-family: 'Noto Nastaliq Urdu', serif; text-align:center;">هـ</h1>
+</div>
 
 
 
@@ -79,7 +80,6 @@ Special thanks to:
 
 **Ready to supercharge your Persian? Join us at هکسره and turn every keystroke into mastery!**
 <br><br>
-<img src="./h.png" style="display: block; margin: 0 auto">
-
-
-<p style="text-align:center; font-weight:bold;">amrqhz</p>
+<div align= center><img src="./h.png""></div>
+<br>
+<p align = center>amrqhz</p>
