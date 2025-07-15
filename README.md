@@ -2,16 +2,21 @@
 
 A simple web application to test and improve Persian speakers' knowledge of correct usage of **هکسره** ("ـه" (heh) and "ـِ" (Ezafe kasra)) in Persian writing.
 
+
 ## 🧐 The هکسره Dilemma
 
 > Persian is beautiful—but mistakes like *هکسره* can sneak in!  
 > This project helps you catch the difference between "ـه" (heh) and "ـِ" (Ezafe kasra), so you always write like a pro.
+
+
 
 ## 📚 About
 
 The **هکسره** website is designed for Persian writers, students, and anyone interested in mastering the tricky rules of **هکسره** in the Persian language.  
 Users can test their skills, learn from their mistakes, and boost their confidence in writing correctly.
 
+
+---
 
 ### 🚀 Quick Start
 
@@ -25,6 +30,7 @@ npm start
 
 Open your browser at [http://localhost:3000](http://localhost:3000).
 
+
 ## ✨ Features
 
 - **Animated, Friendly UI**: Clean, modern, and accessible design using **shadcn/ui**
@@ -34,7 +40,9 @@ Open your browser at [http://localhost:3000](http://localhost:3000).
 - **Responsive Design**: Looks great on mobile, tablet, or desktop
 
 
+---
 
+ 
 ## 🤝 Contributing
 
 Contributions make هکسره shine!  
@@ -45,10 +53,14 @@ Contributions make هکسره shine!
 
 *No idea is too small. Let’s empower Persian literacy—together!*
 
+
 ## 📄 License
 
 Distributed under the MIT License.  
 See [LICENSE](LICENSE) for details.
+
+---
+
 
 ## 🙌 Acknowledgments
 
@@ -56,5 +68,7 @@ Special thanks to:
 - Persian language advocates and educators  
 - shadcn/ui for component inspiration  
 - Early users and contributors—we value your feedback
+
+---
 
 **Ready to supercharge your Persian? Join us at هکسره and turn every keystroke into mastery!**
