@@ -1,8 +1,14 @@
-# هکسره
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400..700&display=swap" rel="stylesheet">
+
+<p style="font-family: 'Noto Nastaliq Urdu', serif;font-size:80px; text-align:center;">هـ</p><br><br>
+
+
+
+
 
 A simple web application to test and improve Persian speakers' knowledge of correct usage of **هکسره** ("ـه" (heh) and "ـِ" (Ezafe kasra)) in Persian writing.
-
-
 ## 🧐 The هکسره Dilemma
 
 > Persian is beautiful—but mistakes like *هکسره* can sneak in!  
@@ -72,3 +78,8 @@ Special thanks to:
 ---
 
 **Ready to supercharge your Persian? Join us at هکسره and turn every keystroke into mastery!**
+<br><br>
+<img src="./h.png" style="display: block; margin: 0 auto">
+
+
+<p style="text-align:center; font-weight:bold;">amrqhz</p>
