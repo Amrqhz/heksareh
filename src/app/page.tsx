@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { Trophy, Twitter, Instagram, Sparkles, Brain, Zap } from "lucide-react"
+import { Trophy, Twitter, Instagram, Sparkles, Brain, Zap, ArrowLeft, Home } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
 interface Question {
@@ -21,6 +21,17 @@ interface Score {
   name: string
   score: number
   date: string
+}
+
+interface LearningContent {
+  emoji: string
+  title: string
+  explanation: string
+  memeTrick: string
+  proTip: string
+  funFact?: string
+  rule?: string
+  examples?: { correct: string; wrong: string; why: string }[]
 }
 
 const questions: Question[] = [
@@ -101,8 +112,8 @@ const wrongMessages = [
   "🤷‍♀️ Hey, at least you're learning! Growth mindset!",
 ]
 
-const getLearningContent = (questionId: number) => {
-  const learningData = {
+const getLearningContent = (questionId: number): LearningContent => {
+  const learningData: { [key: number]: LearningContent } = {
     1: {
       emoji: "👑",
       title: "The Royal Order Rule",
@@ -174,8 +185,10 @@ export default function WritingSkillsQuiz() {
   const [isCorrect, setIsCorrect] = useState(false)
   const [leaderboard, setLeaderboard] = useState<Score[]>([])
   const [selectedLesson, setSelectedLesson] = useState<number | null>(null)
+  const [incorrectlyAnsweredQuestionIds, setIncorrectlyAnsweredQuestionIds] = useState<number[]>([])
 
   useEffect(() => {
+    // Load leaderboard from localStorage on component mount
     const savedScores = localStorage.getItem("writingQuizScores")
     if (savedScores) {
       setLeaderboard(JSON.parse(savedScores))
@@ -187,6 +200,7 @@ export default function WritingSkillsQuiz() {
       setGameState("quiz")
       setCurrentQuestion(0)
       setScore(0)
+      setIncorrectlyAnsweredQuestionIds([]) // Reset for new quiz
     }
   }
 
@@ -202,6 +216,8 @@ export default function WritingSkillsQuiz() {
       setFeedbackMessage(correctMessages[Math.floor(Math.random() * correctMessages.length)])
     } else {
       setFeedbackMessage(wrongMessages[Math.floor(Math.random() * wrongMessages.length)])
+      // Store the ID of the incorrectly answered question
+      setIncorrectlyAnsweredQuestionIds((prev) => [...new Set([...prev, questions[currentQuestion].id])])
     }
 
     setShowFeedback(true)
@@ -225,10 +241,11 @@ export default function WritingSkillsQuiz() {
       date: new Date().toLocaleDateString(),
     }
 
+    // Update leaderboard and save to localStorage
     const updatedLeaderboard = [...leaderboard, newScore].sort((a, b) => b.score - a.score).slice(0, 10)
-
     setLeaderboard(updatedLeaderboard)
     localStorage.setItem("writingQuizScores", JSON.stringify(updatedLeaderboard))
+
     setGameState("results")
   }
 
@@ -250,525 +267,10 @@ export default function WritingSkillsQuiz() {
     setScore(0)
     setSelectedAnswer(null)
     setShowFeedback(false)
+    setIncorrectlyAnsweredQuestionIds([])
   }
 
-  if (gameState === "start") {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-100 to-rose-100 flex items-center justify-center p-4">
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Card className="w-full max-w-md shadow-2xl border-0">
-            <CardHeader className="text-center space-y-4">
-              <motion.div
-                animate={{ rotate: [0, 10, -10, 0] }}
-                transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
-              >
-                <Brain className="w-16 h-16 mx-auto text-amber-600" />
-              </motion.div>
-              <CardTitle className="text-3xl font-bold bg-gradient-to-r from-amber-700 to-orange-700 bg-clip-text text-transparent">
-                Writing Skills Quiz
-              </CardTitle>
-              <CardDescription className="text-lg">
-                Test your grammar knowledge and become a writing wizard! ✨
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <label htmlFor="name" className="text-sm font-medium">
-                  What's your name, future grammar guru?
-                </label>
-                <Input
-                  id="name"
-                  placeholder="Enter your name..."
-                  value={playerName}
-                  onChange={(e) => setPlayerName(e.target.value)}
-                  className="text-center text-lg"
-                />
-              </div>
-              <Button
-                onClick={startQuiz}
-                disabled={!playerName.trim()}
-                className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-lg py-6"
-              >
-                <Sparkles className="w-5 h-5 mr-2" />
-                Start the Challenge!
-              </Button>
-              <Button variant="outline" onClick={() => setGameState("leaderboard")} className="w-full">
-                <Trophy className="w-4 h-4 mr-2" />
-                View Leaderboard
-              </Button>
-              <Button variant="outline" onClick={() => setGameState("learning")} className="w-full">
-                <Brain className="w-4 h-4 mr-2" />
-                Learning Hub
-              </Button>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-    )
-  }
-
-  if (gameState === "quiz") {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-stone-100 via-neutral-50 to-amber-50 flex items-center justify-center p-4">
-        <div className="w-full max-w-2xl">
-          <motion.div
-            key={currentQuestion}
-            initial={{ x: 300, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -300, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Card className="shadow-2xl border-0">
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <Badge variant="secondary" className="text-lg px-4 py-2">
-                    Question {currentQuestion + 1} of {questions.length}
-                  </Badge>
-                  <Badge variant="outline" className="text-lg px-4 py-2">
-                    Score: {score}
-                  </Badge>
-                </div>
-                <CardTitle className="text-2xl mt-4">{questions[currentQuestion].question}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {questions[currentQuestion].options.map((option, index) => (
-                  <motion.div key={index} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                    <Button
-                      variant={
-                        selectedAnswer === index
-                          ? index === questions[currentQuestion].correct
-                            ? "default"
-                            : "destructive"
-                          : "outline"
-                      }
-                      className="w-full text-left justify-start p-6 text-lg h-auto"
-                      onClick={() => handleAnswer(index)}
-                      disabled={selectedAnswer !== null}
-                    >
-                      <span className="font-bold mr-3">{String.fromCharCode(65 + index)}.</span>
-                      {option}
-                    </Button>
-                  </motion.div>
-                ))}
-              </CardContent>
-            </Card>
-
-            {/* Progress Bar */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="mt-6"
-            >
-              <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-amber-700">Progress</span>
-                    <span className="text-sm font-medium text-amber-700">
-                      {Math.round(((currentQuestion + 1) / questions.length) * 100)}%
-                    </span>
-                  </div>
-
-                  {/* Progress Bar Background */}
-                  <div className="w-full bg-amber-100 rounded-full h-3 overflow-hidden shadow-inner">
-                    {/* Progress Bar Fill */}
-                    <motion.div
-                      className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full shadow-sm"
-                      initial={{ width: 0 }}
-                      animate={{
-                        width: `${((currentQuestion + 1) / questions.length) * 100}%`,
-                      }}
-                      transition={{
-                        duration: 0.8,
-                        ease: "easeOut",
-                        delay: 0.3,
-                      }}
-                    />
-                  </div>
-
-                  {/* Question Indicators */}
-                  <div className="flex justify-between mt-3">
-                    {questions.map((_, index) => (
-                      <motion.div
-                        key={index}
-                        className={`w-3 h-3 rounded-full border-2 transition-all duration-300 ${
-                          index < currentQuestion
-                            ? "bg-green-400 border-green-500 shadow-sm"
-                            : index === currentQuestion
-                              ? "bg-amber-400 border-amber-500 shadow-sm scale-125"
-                              : "bg-white border-amber-300"
-                        }`}
-                        initial={{ scale: 0 }}
-                        animate={{ scale: index <= currentQuestion ? 1 : 0.8 }}
-                        transition={{ delay: index * 0.1 + 0.5 }}
-                      />
-                    ))}
-                  </div>
-
-                  {/* Progress Text */}
-                  <div className="text-center mt-2">
-                    <span className="text-xs text-amber-600 font-medium">
-                      Question {currentQuestion + 1} of {questions.length}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </motion.div>
-
-          <AnimatePresence>
-            {showFeedback && (
-              <motion.div
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0, opacity: 0 }}
-                className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-50"
-              >
-                <motion.div
-                  initial={{ y: 50, scale: 0.8 }}
-                  animate={{ y: 0, scale: 1 }}
-                  exit={{ y: -50, scale: 0.8 }}
-                  transition={{ type: "spring", damping: 15 }}
-                >
-                  <Card
-                    className={`max-w-lg mx-4 shadow-2xl border-0 ${
-                      isCorrect
-                        ? "bg-gradient-to-br from-green-50 to-emerald-100"
-                        : "bg-gradient-to-br from-red-50 to-rose-100"
-                    }`}
-                  >
-                    <CardContent className="text-center p-8 space-y-6">
-                      <motion.div
-                        animate={{
-                          rotate: isCorrect ? [0, 10, -10, 0] : [0, -5, 5, 0],
-                          scale: [1, 1.2, 1],
-                        }}
-                        transition={{ duration: 0.6, repeat: 1 }}
-                        className={`text-8xl mb-4 ${isCorrect ? "drop-shadow-lg" : ""}`}
-                      >
-                        {isCorrect ? "🎉" : "😅"}
-                      </motion.div>
-
-                      <div
-                        className={`p-4 rounded-xl ${
-                          isCorrect ? "bg-green-100 border-2 border-green-300" : "bg-red-100 border-2 border-red-300"
-                        }`}
-                      >
-                        <h3 className={`text-2xl font-bold mb-2 ${isCorrect ? "text-green-800" : "text-red-800"}`}>
-                          {feedbackMessage}
-                        </h3>
-                      </div>
-
-                      {questions[currentQuestion].explanation && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.3 }}
-                          className="bg-white/80 backdrop-blur-sm p-4 rounded-lg border border-amber-200"
-                        >
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-2xl">💡</span>
-                            <span className="font-semibold text-amber-800">Pro Tip:</span>
-                          </div>
-                          <p className="text-amber-700 text-sm leading-relaxed">
-                            {questions[currentQuestion].explanation}
-                          </p>
-                        </motion.div>
-                      )}
-
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: "100%" }}
-                        transition={{ duration: 3 }}
-                        className={`h-1 rounded-full ${isCorrect ? "bg-green-400" : "bg-red-400"}`}
-                      />
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
-    )
-  }
-
-  if (gameState === "results") {
-    const percentage = Math.round((score / questions.length) * 100)
-    const getGrade = () => {
-      if (percentage >= 90) return { grade: "A+", emoji: "🏆", message: "Grammar Genius!" }
-      if (percentage >= 80) return { grade: "A", emoji: "⭐", message: "Excellent Writer!" }
-      if (percentage >= 70) return { grade: "B", emoji: "👏", message: "Good Job!" }
-      if (percentage >= 60) return { grade: "C", emoji: "👍", message: "Not Bad!" }
-      return { grade: "D", emoji: "📚", message: "Keep Learning!" }
-    }
-
-    const result = getGrade()
-
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-rose-50 via-amber-50 to-orange-100 flex items-center justify-center p-4">
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Card className="w-full max-w-md shadow-2xl border-0">
-            <CardHeader className="text-center space-y-4">
-              <motion.div
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY }}
-                className="text-8xl"
-              >
-                {result.emoji}
-              </motion.div>
-              <CardTitle className="text-3xl font-bold">Congratulations, {playerName}!</CardTitle>
-              <CardDescription className="text-xl">{result.message}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6 text-center">
-              <div className="space-y-2">
-                <div className="text-6xl font-bold text-primary">
-                  {score}/{questions.length}
-                </div>
-                <div className="text-2xl font-semibold">Grade: {result.grade}</div>
-                <div className="text-lg text-muted-foreground">{percentage}% Correct</div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-3">
-                <h3 className="font-semibold text-lg">Share Your Achievement!</h3>
-                <div className="flex gap-3">
-                  <Button onClick={shareToTwitter} className="flex-1 bg-transparent" variant="outline">
-                    <Twitter className="w-4 h-4 mr-2" />
-                    Twitter
-                  </Button>
-                  <Button onClick={shareToInstagram} className="flex-1 bg-transparent" variant="outline">
-                    <Instagram className="w-4 h-4 mr-2" />
-                    Instagram
-                  </Button>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-3">
-                <Button onClick={resetQuiz} className="w-full">
-                  <Zap className="w-4 h-4 mr-2" />
-                  Play Again
-                </Button>
-                <Button onClick={() => setGameState("leaderboard")} variant="outline" className="w-full">
-                  <Trophy className="w-4 h-4 mr-2" />
-                  View Leaderboard
-                </Button>
-              </div>
-            </CardContent>
-            {/* Learning Section */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8, duration: 0.6 }}
-              className="mt-6"
-            >
-              <Card className="shadow-xl border-0 bg-gradient-to-br from-amber-50 to-orange-50">
-                <CardHeader className="text-center pb-4">
-                  <div className="flex items-center justify-center gap-2 mb-2">
-                    <span className="text-3xl">🎓</span>
-                    <CardTitle className="text-2xl font-bold bg-gradient-to-r from-amber-700 to-orange-700 bg-clip-text text-transparent">
-                      Grammar Bootcamp
-                    </CardTitle>
-                    <span className="text-3xl">📚</span>
-                  </div>
-                  <CardDescription className="text-lg">Time to level up your writing game! 💪✨</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {questions.map((question, index) => {
-                    const wasWrong = selectedAnswer !== question.correct
-                    const learningContent = getLearningContent(question.id)
-
-                    return (
-                      <motion.div
-                        key={question.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 1 + index * 0.2 }}
-                        className={`p-4 rounded-xl border-2 transition-all duration-300 ${
-                          wasWrong
-                            ? "bg-gradient-to-r from-red-50 to-rose-100 border-red-200 shadow-md"
-                            : "bg-gradient-to-r from-green-50 to-emerald-100 border-green-200 shadow-sm"
-                        }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="text-3xl mt-1">{wasWrong ? "🤯" : "🧠"}</div>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Badge variant={wasWrong ? "destructive" : "default"} className="text-xs">
-                                Question {index + 1}
-                              </Badge>
-                              <span className="text-sm font-semibold">{wasWrong ? "Oops Moment!" : "Nailed It!"}</span>
-                            </div>
-
-                            <div className="space-y-3">
-                              <div className="bg-white/80 backdrop-blur-sm p-3 rounded-lg border border-amber-200">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <span className="text-xl">{learningContent.emoji}</span>
-                                  <span className="font-bold text-amber-800">{learningContent.title}</span>
-                                </div>
-                                <p className="text-sm text-amber-700 leading-relaxed">{learningContent.explanation}</p>
-                              </div>
-
-                              <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-3 rounded-lg border border-purple-200">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <span className="text-xl">🎭</span>
-                                  <span className="font-bold text-purple-800">Meme Memory Trick</span>
-                                </div>
-                                <p className="text-sm text-purple-700 font-medium italic">
-                                  {learningContent.memeTrick}
-                                </p>
-                              </div>
-
-                              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-3 rounded-lg border border-blue-200">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <span className="text-xl">💡</span>
-                                  <span className="font-bold text-blue-800">Pro Tip</span>
-                                </div>
-                                <p className="text-sm text-blue-700">{learningContent.proTip}</p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </motion.div>
-                    )
-                  })}
-
-                  {/* Fun Grammar Facts */}
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 2, duration: 0.5 }}
-                    className="mt-6 p-4 bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl border-2 border-yellow-300"
-                  >
-                    <div className="text-center space-y-3">
-                      <div className="flex items-center justify-center gap-2">
-                        <span className="text-2xl">🤓</span>
-                        <h3 className="text-xl font-bold text-yellow-800">Bonus: Grammar Meme Facts!</h3>
-                        <span className="text-2xl">🤓</span>
-                      </div>
-
-                      <div className="grid gap-3">
-                        <div className="bg-white/80 p-3 rounded-lg">
-                          <p className="text-sm text-yellow-700">
-                            <strong>🍕 Fun Fact:</strong> The Oxford comma literally saves lives! "Let's eat, Grandma!"
-                            vs "Let's eat Grandma!" - Grandma appreciates proper punctuation! 😂
-                          </p>
-                        </div>
-
-                        <div className="bg-white/80 p-3 rounded-lg">
-                          <p className="text-sm text-yellow-700">
-                            <strong>🎯 Grammar Ninja Tip:</strong> "I before E except after C" has more exceptions than
-                            rules. English is basically trolling us at this point! 🤷‍♀️
-                          </p>
-                        </div>
-
-                        <div className="bg-white/80 p-3 rounded-lg">
-                          <p className="text-sm text-yellow-700">
-                            <strong>🚀 Mind Blown:</strong> Shakespeare invented over 1,700 words we still use today.
-                            Dude was basically the original influencer! 💅
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-
-                  {/* Motivational Message */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 2.5 }}
-                    className="text-center p-4 bg-gradient-to-r from-rose-50 to-pink-50 rounded-xl border-2 border-rose-200"
-                  >
-                    <div className="space-y-2">
-                      <div className="text-4xl">🎉</div>
-                      <h3 className="text-lg font-bold text-rose-800">
-                        You're officially 10x smarter than when you started!
-                      </h3>
-                      <p className="text-sm text-rose-600">
-                        Grammar is like a gym for your brain - the more you practice, the stronger you get! 💪
-                      </p>
-                    </div>
-                  </motion.div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </Card>
-        </motion.div>
-      </div>
-    )
-  }
-
-  if (gameState === "leaderboard") {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-neutral-100 via-stone-50 to-rose-50 flex items-center justify-center p-4">
-        <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5 }}>
-          <Card className="w-full max-w-md shadow-2xl border-0">
-            <CardHeader className="text-center">
-              <Trophy className="w-12 h-12 mx-auto text-yellow-600 mb-2" />
-              <CardTitle className="text-2xl font-bold">🏆 Hall of Fame 🏆</CardTitle>
-              <CardDescription>Top Writing Champions</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {leaderboard.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">No scores yet! Be the first to play! 🎯</p>
-              ) : (
-                leaderboard.map((entry, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ x: -50, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: index * 0.1 }}
-                    className={`flex items-center justify-between p-3 rounded-lg ${
-                      index === 0
-                        ? "bg-yellow-100 border-2 border-yellow-400"
-                        : index === 1
-                          ? "bg-gray-100 border-2 border-gray-400"
-                          : index === 2
-                            ? "bg-orange-100 border-2 border-orange-400"
-                            : "bg-muted"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">
-                        {index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`}
-                      </span>
-                      <div>
-                        <div className="font-semibold">{entry.name}</div>
-                        <div className="text-sm text-muted-foreground">{entry.date}</div>
-                      </div>
-                    </div>
-                    <Badge variant={index < 3 ? "default" : "secondary"} className="text-lg px-3 py-1">
-                      {entry.score}/{questions.length}
-                    </Badge>
-                  </motion.div>
-                ))
-              )}
-
-              <Separator />
-
-              <Button onClick={() => setGameState("start")} className="w-full">
-                <Sparkles className="w-4 h-4 mr-2" />
-                Back to Start
-              </Button>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-    )
-  }
-
-  const lessons = [
+  const allLessons = [
     {
       id: 1,
       title: "Your vs You're Mastery",
@@ -788,8 +290,7 @@ export default function WritingSkillsQuiz() {
         ],
         memeTrick:
           "If you can replace it with 'you are' and it still makes sense, use YOU'RE. Otherwise, it's YOUR problem! 😄",
-        proTip:
-          "When texting, take 2 seconds to expand it in your head. 'You are phone is ringing' sounds wrong, so it's 'Your phone'!",
+        proTip: "When in doubt, expand it! 'You are phone is ringing' sounds wrong, so it's 'Your phone'!",
         funFact: "This mistake is so common, there are entire meme pages dedicated to it. Don't be meme material! 📱",
       },
     },
@@ -947,270 +448,835 @@ export default function WritingSkillsQuiz() {
     },
   ]
 
-  if (selectedLesson !== null) {
-    const lesson = lessons.find((l) => l.id === selectedLesson)
-    if (!lesson) return null
-
+  if (gameState === "start") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50 p-4">
-        <div className="max-w-4xl mx-auto">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            {/* Header */}
-            <Card className="shadow-xl border-0 mb-6">
-              <CardHeader className="text-center">
-                <div className="flex items-center justify-center gap-3 mb-4">
-                  <Button variant="outline" onClick={() => setSelectedLesson(null)} className="absolute left-4">
-                    ← Back
-                  </Button>
-                  <span className="text-4xl">{lesson.emoji}</span>
-                  <CardTitle className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                    {lesson.title}
-                  </CardTitle>
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-100 to-rose-100 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="w-full max-w-md"
+        >
+          <Card className="shadow-2xl border-0">
+            <CardHeader className="text-center space-y-4">
+              <motion.div
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+              >
+                <Brain className="w-16 h-16 mx-auto text-amber-600" />
+              </motion.div>
+              <CardTitle className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-amber-700 to-orange-700 bg-clip-text text-transparent">
+                Writing Skills Quiz
+              </CardTitle>
+              <CardDescription className="text-base sm:text-lg">
+                Test your grammar knowledge and become a writing wizard! ✨
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <label htmlFor="name" className="text-sm font-medium">
+                  What's your name, future grammar guru?
+                </label>
+                <Input
+                  id="name"
+                  placeholder="Enter your name..."
+                  value={playerName}
+                  onChange={(e) => setPlayerName(e.target.value)}
+                  className="text-center text-lg"
+                />
+              </div>
+              <Button
+                onClick={startQuiz}
+                disabled={!playerName.trim()}
+                className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-lg py-6"
+              >
+                <Sparkles className="w-5 h-5 mr-2" />
+                Start the Challenge!
+              </Button>
+              <div className="space-y-3">
+                <Button variant="outline" onClick={() => setGameState("leaderboard")} className="w-full">
+                  <Trophy className="w-4 h-4 mr-2" />
+                  View Leaderboard
+                </Button>
+                <Button variant="outline" onClick={() => setGameState("learning")} className="w-full">
+                  <Brain className="w-4 h-4 mr-2" />
+                  Learning Hub
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    )
+  }
+
+  if (gameState === "quiz") {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-stone-100 via-neutral-50 to-amber-50 flex items-center justify-center p-4">
+        <div className="w-full max-w-4xl">
+          <motion.div
+            key={currentQuestion}
+            initial={{ x: 300, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -300, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className="shadow-2xl border-0">
+              <CardHeader className="p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
+                  <Badge variant="secondary" className="text-sm sm:text-base lg:text-lg px-3 sm:px-4 py-2 w-fit">
+                    Question {currentQuestion + 1} of {questions.length}
+                  </Badge>
+                  <Badge variant="outline" className="text-sm sm:text-base lg:text-lg px-3 sm:px-4 py-2 w-fit">
+                    Score: {score}
+                  </Badge>
                 </div>
-                <Badge variant="secondary" className="text-lg px-4 py-2">
-                  {lesson.difficulty} Level
-                </Badge>
+                <CardTitle className="text-lg sm:text-xl lg:text-2xl leading-relaxed break-words">
+                  {questions[currentQuestion].question}
+                </CardTitle>
               </CardHeader>
+              <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
+                {questions[currentQuestion].options.map((option, index) => (
+                  <motion.div key={index} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                    <Button
+                      variant={
+                        selectedAnswer === index
+                          ? index === questions[currentQuestion].correct
+                            ? "default"
+                            : "destructive"
+                          : "outline"
+                      }
+                      className="w-full text-left justify-start p-3 sm:p-4 lg:p-6 h-auto min-h-[3rem] sm:min-h-[4rem]"
+                      onClick={() => handleAnswer(index)}
+                      disabled={selectedAnswer !== null}
+                    >
+                      <div className="flex items-start gap-2 sm:gap-3 w-full">
+                        <span className="font-bold text-sm sm:text-base lg:text-lg flex-shrink-0 mt-0.5">
+                          {String.fromCharCode(65 + index)}.
+                        </span>
+                        <span className="text-sm sm:text-base lg:text-lg leading-relaxed break-words text-left flex-1">
+                          {option}
+                        </span>
+                      </div>
+                    </Button>
+                  </motion.div>
+                ))}
+              </CardContent>
             </Card>
 
-            {/* Lesson Content */}
-            <div className="space-y-6">
-              {/* Explanation */}
-              <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
-                <Card className="shadow-lg border-0">
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <span className="text-2xl">📖</span>
-                      <h3 className="text-xl font-bold text-purple-800">What's the Deal?</h3>
-                    </div>
-                    <p className="text-lg text-gray-700 leading-relaxed">{lesson.content.explanation}</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
+            {/* Progress Bar */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="mt-4 sm:mt-6"
+            >
+              <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs sm:text-sm font-medium text-amber-700">Progress</span>
+                    <span className="text-xs sm:text-sm font-medium text-amber-700">
+                      {Math.round(((currentQuestion + 1) / questions.length) * 100)}%
+                    </span>
+                  </div>
 
-              {/* Rule */}
-              <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>
-                <Card className="shadow-lg border-0 bg-gradient-to-r from-blue-50 to-cyan-50">
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <span className="text-2xl">⚖️</span>
-                      <h3 className="text-xl font-bold text-blue-800">The Golden Rule</h3>
-                    </div>
-                    <p className="text-lg font-semibold text-blue-700 bg-white/80 p-4 rounded-lg border border-blue-200">
-                      {lesson.content.rule}
-                    </p>
-                  </CardContent>
-                </Card>
-              </motion.div>
+                  {/* Progress Bar Background */}
+                  <div className="w-full bg-amber-100 rounded-full h-2 sm:h-3 overflow-hidden shadow-inner">
+                    {/* Progress Bar Fill */}
+                    <motion.div
+                      className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full shadow-sm"
+                      initial={{ width: 0 }}
+                      animate={{
+                        width: `${((currentQuestion + 1) / questions.length) * 100}%`,
+                      }}
+                      transition={{
+                        duration: 0.8,
+                        ease: "easeOut",
+                        delay: 0.3,
+                      }}
+                    />
+                  </div>
 
-              {/* Examples */}
-              <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.6 }}>
-                <Card className="shadow-lg border-0">
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <span className="text-2xl">💡</span>
-                      <h3 className="text-xl font-bold text-green-800">Examples That Actually Make Sense</h3>
-                    </div>
-                    <div className="space-y-4">
-                      {lesson.content.examples.map((example, index) => (
-                        <div
-                          key={index}
-                          className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200"
-                        >
-                          <div className="grid md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <div className="flex items-center gap-2">
-                                <span className="text-green-600 font-bold">✅ CORRECT:</span>
-                                <span className="font-semibold text-green-800">"{example.correct}"</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-red-600 font-bold">❌ WRONG:</span>
-                                <span className="font-semibold text-red-800 line-through">"{example.wrong}"</span>
-                              </div>
-                            </div>
-                            <div className="bg-white/80 p-3 rounded-lg">
-                              <span className="text-sm font-medium text-gray-700">💭 Why: {example.why}</span>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
+                  {/* Question Indicators */}
+                  <div className="flex justify-between mt-2 sm:mt-3 gap-1">
+                    {questions.map((_, index) => (
+                      <motion.div
+                        key={index}
+                        className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full border-2 transition-all duration-300 ${
+                          index < currentQuestion
+                            ? "bg-green-400 border-green-500 shadow-sm"
+                            : index === currentQuestion
+                              ? "bg-amber-400 border-amber-500 shadow-sm scale-110 sm:scale-125"
+                              : "bg-white border-amber-300"
+                        }`}
+                        initial={{ scale: 0 }}
+                        animate={{ scale: index <= currentQuestion ? 1 : 0.8 }}
+                        transition={{ delay: index * 0.1 + 0.5 }}
+                      />
+                    ))}
+                  </div>
 
-              {/* Meme Trick */}
-              <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.8 }}>
-                <Card className="shadow-lg border-0 bg-gradient-to-r from-yellow-50 to-amber-50">
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <span className="text-2xl">🎭</span>
-                      <h3 className="text-xl font-bold text-yellow-800">Meme Memory Trick</h3>
-                    </div>
-                    <p className="text-lg font-medium text-yellow-700 bg-white/80 p-4 rounded-lg border border-yellow-200 italic">
-                      {lesson.content.memeTrick}
-                    </p>
-                  </CardContent>
-                </Card>
-              </motion.div>
+                  {/* Progress Text */}
+                  <div className="text-center mt-2">
+                    <span className="text-xs font-medium text-amber-600">
+                      Question {currentQuestion + 1} of {questions.length}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </motion.div>
 
-              {/* Pro Tip */}
-              <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 1.0 }}>
-                <Card className="shadow-lg border-0 bg-gradient-to-r from-indigo-50 to-purple-50">
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <span className="text-2xl">🎯</span>
-                      <h3 className="text-xl font-bold text-indigo-800">Pro Tip</h3>
-                    </div>
-                    <p className="text-lg text-indigo-700 bg-white/80 p-4 rounded-lg border border-indigo-200">
-                      {lesson.content.proTip}
-                    </p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              {/* Fun Fact */}
-              <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 1.2 }}>
-                <Card className="shadow-lg border-0 bg-gradient-to-r from-pink-50 to-rose-50">
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <span className="text-2xl">🤯</span>
-                      <h3 className="text-xl font-bold text-pink-800">Mind-Blowing Fun Fact</h3>
-                    </div>
-                    <p className="text-lg text-pink-700 bg-white/80 p-4 rounded-lg border border-pink-200">
-                      {lesson.content.funFact}
-                    </p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              {/* Navigation */}
+          <AnimatePresence>
+            {showFeedback && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.4 }}
-                className="flex gap-4 justify-center pt-6"
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0, opacity: 0 }}
+                className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-50 p-4"
               >
-                <Button onClick={() => setSelectedLesson(null)} variant="outline" className="px-8">
-                  Back to Lessons
-                </Button>
-                <Button onClick={() => setGameState("start")} className="px-8">
-                  Take the Quiz!
-                </Button>
+                <motion.div
+                  initial={{ y: 50, scale: 0.8 }}
+                  animate={{ y: 0, scale: 1 }}
+                  exit={{ y: -50, scale: 0.8 }}
+                  transition={{ type: "spring", damping: 15 }}
+                  className="w-full max-w-lg"
+                >
+                  <Card
+                    className={`shadow-2xl border-0 ${
+                      isCorrect
+                        ? "bg-gradient-to-br from-green-50 to-emerald-100"
+                        : "bg-gradient-to-br from-red-50 to-rose-100"
+                    }`}
+                  >
+                    <CardContent className="text-center p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
+                      <motion.div
+                        animate={{
+                          rotate: isCorrect ? [0, 10, -10, 0] : [0, -5, 5, 0],
+                          scale: [1, 1.2, 1],
+                        }}
+                        transition={{ duration: 0.6, repeat: 1 }}
+                        className={`text-5xl sm:text-6xl lg:text-8xl mb-4 ${isCorrect ? "drop-shadow-lg" : ""}`}
+                      >
+                        {isCorrect ? "🎉" : "😅"}
+                      </motion.div>
+
+                      <div
+                        className={`p-3 sm:p-4 rounded-xl ${
+                          isCorrect ? "bg-green-100 border-2 border-green-300" : "bg-red-100 border-2 border-red-300"
+                        }`}
+                      >
+                        <h3
+                          className={`text-lg sm:text-xl lg:text-2xl font-bold mb-2 leading-relaxed ${
+                            isCorrect ? "text-green-800" : "text-red-800"
+                          }`}
+                        >
+                          {feedbackMessage}
+                        </h3>
+                      </div>
+
+                      {questions[currentQuestion].explanation && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.3 }}
+                          className="bg-white/80 backdrop-blur-sm p-3 sm:p-4 rounded-lg border border-amber-200"
+                        >
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-xl sm:text-2xl">💡</span>
+                            <span className="font-semibold text-amber-800 text-sm sm:text-base">Pro Tip:</span>
+                          </div>
+                          <p className="text-amber-700 text-xs sm:text-sm leading-relaxed break-words">
+                            {questions[currentQuestion].explanation}
+                          </p>
+                        </motion.div>
+                      )}
+
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: "100%" }}
+                        transition={{ duration: 3 }}
+                        className={`h-1 rounded-full ${isCorrect ? "bg-green-400" : "bg-red-400"}`}
+                      />
+                    </CardContent>
+                  </Card>
+                </motion.div>
               </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    )
+  }
+
+  if (gameState === "results") {
+    const percentage = Math.round((score / questions.length) * 100)
+    const getGrade = () => {
+      if (percentage >= 90) return { grade: "A+", emoji: "🏆", message: "Grammar Genius!" }
+      if (percentage >= 80) return { grade: "A", emoji: "⭐", message: "Excellent Writer!" }
+      if (percentage >= 70) return { grade: "B", emoji: "👏", message: "Good Job!" }
+      if (percentage >= 60) return { grade: "C", emoji: "👍", message: "Not Bad!" }
+      return { grade: "D", emoji: "📚", message: "Keep Learning!" }
+    }
+
+    const result = getGrade()
+
+    // Filter questions to only show those answered incorrectly
+    const relevantLearningQuestions = questions.filter((q) => incorrectlyAnsweredQuestionIds.includes(q.id))
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-rose-50 via-amber-50 to-orange-100 p-4">
+        <div className="flex items-center justify-center min-h-screen">
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="w-full max-w-md"
+          >
+            {/* Home Button - Fixed Position */}
+            <div className="fixed top-4 left-4 z-10">
+              <Button variant="outline" onClick={() => setGameState("start")} className="shadow-lg">
+                <Home className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Home</span>
+              </Button>
             </div>
+
+            <Card className="shadow-2xl border-0">
+              <CardHeader className="text-center space-y-4 pt-8">
+                <motion.div
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY }}
+                  className="text-6xl sm:text-8xl"
+                >
+                  {result.emoji}
+                </motion.div>
+                <CardTitle className="text-2xl sm:text-3xl font-bold">Congratulations, {playerName}!</CardTitle>
+                <CardDescription className="text-lg sm:text-xl">{result.message}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6 text-center">
+                <div className="space-y-2">
+                  <div className="text-5xl sm:text-6xl font-bold text-primary">
+                    {score}/{questions.length}
+                  </div>
+                  <div className="text-xl sm:text-2xl font-semibold">Grade: {result.grade}</div>
+                  <div className="text-base sm:text-lg text-muted-foreground">{percentage}% Correct</div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-lg">Share Your Achievement!</h3>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Button onClick={shareToTwitter} className="flex-1 bg-transparent" variant="outline">
+                      <Twitter className="w-4 h-4 mr-2" />
+                      Twitter
+                    </Button>
+                    <Button onClick={shareToInstagram} className="flex-1 bg-transparent" variant="outline">
+                      <Instagram className="w-4 h-4 mr-2" />
+                      Instagram
+                    </Button>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-3">
+                  <Button onClick={resetQuiz} className="w-full">
+                    <Zap className="w-4 h-4 mr-2" />
+                    Play Again
+                  </Button>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Button onClick={() => setGameState("leaderboard")} variant="outline" className="flex-1">
+                      <Trophy className="w-4 h-4 mr-2" />
+                      Leaderboard
+                    </Button>
+                    <Button onClick={() => setGameState("learning")} variant="outline" className="flex-1">
+                      <Brain className="w-4 h-4 mr-2" />
+                      Learn More
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+
+              {/* Targeted Learning Section for Incorrect Answers */}
+              {relevantLearningQuestions.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.8, duration: 0.6 }}
+                  className="mt-6"
+                >
+                  <Card className="shadow-xl border-0 bg-gradient-to-br from-amber-50 to-orange-50">
+                    <CardHeader className="text-center pb-4">
+                      <div className="flex items-center justify-center gap-2 mb-2">
+                        <span className="text-2xl sm:text-3xl">🤯</span>
+                        <CardTitle className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-amber-700 to-orange-700 bg-clip-text text-transparent">
+                          Oops! Let's Learn!
+                        </CardTitle>
+                        <span className="text-2xl sm:text-3xl">💡</span>
+                      </div>
+                      <CardDescription className="text-base sm:text-lg">
+                        Here's what went wrong and how to fix it! 💪✨
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {relevantLearningQuestions.map((question, index) => {
+                        const learningContent = getLearningContent(question.id)
+
+                        return (
+                          <motion.div
+                            key={question.id}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 1 + index * 0.2 }}
+                            className="p-4 rounded-xl border-2 transition-all duration-300 bg-gradient-to-r from-red-50 to-rose-100 border-red-200 shadow-md"
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="text-2xl sm:text-3xl mt-1">🤯</div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
+                                  <Badge variant="destructive" className="text-xs w-fit">
+                                    Question {questions.findIndex((q) => q.id === question.id) + 1}
+                                  </Badge>
+                                  <span className="text-sm font-semibold">Oops Moment!</span>
+                                </div>
+
+                                <div className="space-y-3">
+                                  <div className="bg-white/80 backdrop-blur-sm p-3 rounded-lg border border-amber-200">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <span className="text-xl">{learningContent.emoji}</span>
+                                      <span className="font-bold text-amber-800 text-sm sm:text-base">
+                                        {learningContent.title}
+                                      </span>
+                                    </div>
+                                    <p className="text-sm text-amber-700 leading-relaxed">
+                                      {learningContent.explanation}
+                                    </p>
+                                  </div>
+
+                                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-3 rounded-lg border border-purple-200">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <span className="text-xl">🎭</span>
+                                      <span className="font-bold text-purple-800 text-sm sm:text-base">
+                                        Meme Memory Trick
+                                      </span>
+                                    </div>
+                                    <p className="text-sm text-purple-700 font-medium italic">
+                                      {learningContent.memeTrick}
+                                    </p>
+                                  </div>
+
+                                  <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-3 rounded-lg border border-blue-200">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <span className="text-xl">💡</span>
+                                      <span className="font-bold text-blue-800 text-sm sm:text-base">Pro Tip</span>
+                                    </div>
+                                    <p className="text-sm text-blue-700">{learningContent.proTip}</p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )
+                      })}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
+            </Card>
           </motion.div>
         </div>
       </div>
     )
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4">
-      <div className="max-w-6xl mx-auto">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-          {/* Header */}
-          <Card className="shadow-xl border-0 mb-8">
-            <CardHeader className="text-center">
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <Button variant="outline" onClick={() => setGameState("start")} className="absolute left-4">
-                  ← Home
-                </Button>
-                <span className="text-4xl">🎓</span>
-                <CardTitle className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                  Grammar Learning Hub
-                </CardTitle>
-                <span className="text-4xl">📚</span>
-              </div>
-              <CardDescription className="text-xl">
-                Master the art of writing with our meme-powered grammar lessons! 🚀
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          {/* Lessons Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {lessons.map((lesson, index) => (
-              <motion.div
-                key={lesson.id}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 + 0.2 }}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <Card
-                  className="shadow-lg border-0 cursor-pointer hover:shadow-xl transition-all duration-300 h-full"
-                  onClick={() => setSelectedLesson(lesson.id)}
-                >
-                  <CardContent className="p-6 flex flex-col h-full">
-                    <div className="text-center mb-4">
-                      <div className="text-5xl mb-3">{lesson.emoji}</div>
-                      <h3 className="text-xl font-bold text-gray-800 mb-2">{lesson.title}</h3>
-                      <Badge
-                        variant={
-                          lesson.difficulty === "Beginner"
-                            ? "default"
-                            : lesson.difficulty === "Intermediate"
-                              ? "secondary"
-                              : "destructive"
-                        }
-                        className="text-sm"
-                      >
-                        {lesson.difficulty}
-                      </Badge>
-                    </div>
-
-                    <div className="flex-1 flex items-end">
-                      <Button className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600">
-                        Start Learning! 🚀
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Fun Stats */}
+  if (gameState === "leaderboard") {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-neutral-100 via-stone-50 to-rose-50 p-4">
+        <div className="flex items-center justify-center min-h-screen">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-            className="mt-8"
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="w-full max-w-md"
           >
-            <Card className="shadow-lg border-0 bg-gradient-to-r from-orange-50 to-red-50">
-              <CardContent className="p-6 text-center">
-                <div className="flex items-center justify-center gap-2 mb-4">
-                  <span className="text-3xl">🔥</span>
-                  <h3 className="text-2xl font-bold text-orange-800">Why Learn Grammar?</h3>
-                  <span className="text-3xl">🔥</span>
-                </div>
-                <div className="grid md:grid-cols-3 gap-4 text-center">
-                  <div className="bg-white/80 p-4 rounded-lg">
-                    <div className="text-2xl mb-2">💼</div>
-                    <p className="text-sm font-semibold text-orange-700">
-                      Better job prospects - employers notice good grammar!
-                    </p>
-                  </div>
-                  <div className="bg-white/80 p-4 rounded-lg">
-                    <div className="text-2xl mb-2">🧠</div>
-                    <p className="text-sm font-semibold text-orange-700">
-                      Clearer thinking - good grammar = organized thoughts!
-                    </p>
-                  </div>
-                  <div className="bg-white/80 p-4 rounded-lg">
-                    <div className="text-2xl mb-2">😎</div>
-                    <p className="text-sm font-semibold text-orange-700">
-                      Instant credibility - sound smarter in every conversation!
-                    </p>
-                  </div>
-                </div>
+            {/* Home Button - Fixed Position */}
+            <div className="fixed top-4 left-4 z-10">
+              <Button variant="outline" onClick={() => setGameState("start")} className="shadow-lg">
+                <Home className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Home</span>
+              </Button>
+            </div>
+
+            <Card className="shadow-2xl border-0">
+              <CardHeader className="text-center pt-8 pb-4">
+                <Trophy className="w-12 h-12 mx-auto text-yellow-600 mb-2" />
+                <CardTitle className="text-xl sm:text-2xl font-bold">🏆 Hall of Fame 🏆</CardTitle>
+                <CardDescription className="text-base sm:text-lg">Top Writing Champions</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {leaderboard.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">No scores yet! Be the first to play! 🎯</p>
+                ) : (
+                  leaderboard.map((entry, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ x: -50, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{ delay: index * 0.1 }}
+                      className={`flex items-center justify-between p-3 rounded-lg ${
+                        index === 0
+                          ? "bg-yellow-100 border-2 border-yellow-400"
+                          : index === 1
+                            ? "bg-gray-100 border-2 border-gray-400"
+                            : index === 2
+                              ? "bg-orange-100 border-2 border-orange-400"
+                              : "bg-muted"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <span className="text-xl sm:text-2xl flex-shrink-0">
+                          {index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="font-semibold truncate">{entry.name}</div>
+                          <div className="text-sm text-muted-foreground">{entry.date}</div>
+                        </div>
+                      </div>
+                      <Badge variant={index < 3 ? "default" : "secondary"} className="text-base sm:text-lg px-3 py-1">
+                        {entry.score}/{questions.length}
+                      </Badge>
+                    </motion.div>
+                  ))
+                )}
+
+                <Separator />
+
+                <Button onClick={() => setGameState("start")} className="w-full">
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Back to Start
+                </Button>
               </CardContent>
             </Card>
           </motion.div>
-        </motion.div>
+        </div>
       </div>
-    </div>
-  )
+    )
+  }
+
+  if (gameState === "learning") {
+    if (selectedLesson !== null) {
+      const lesson = allLessons.find((l) => l.id === selectedLesson)
+      if (!lesson) return null
+
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50 p-4">
+          <div className="max-w-4xl mx-auto">
+            {/* Home Button - Fixed Position */}
+            <div className="fixed top-4 left-4 z-10">
+              <Button variant="outline" onClick={() => setGameState("start")} className="shadow-lg">
+                <Home className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Home</span>
+              </Button>
+            </div>
+
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+              {/* Header */}
+              <Card className="shadow-xl border-0 mb-6 mt-16 sm:mt-6">
+                <CardHeader className="text-center pb-4">
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => setSelectedLesson(null)}
+                      className="self-start sm:absolute sm:left-4"
+                    >
+                      <ArrowLeft className="w-4 h-4 mr-2" />
+                      <span className="hidden sm:inline">Back to Lessons</span>
+                      <span className="sm:hidden">Back</span>
+                    </Button>
+                    <div className="flex items-center gap-3">
+                      <span className="text-3xl sm:text-4xl">{lesson.emoji}</span>
+                      <CardTitle className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent text-center">
+                        {lesson.title}
+                      </CardTitle>
+                    </div>
+                  </div>
+                  <Badge variant="secondary" className="text-base sm:text-lg px-4 py-2">
+                    {lesson.difficulty} Level
+                  </Badge>
+                </CardHeader>
+              </Card>
+
+              {/* Lesson Content */}
+              <div className="space-y-6">
+                {/* Explanation */}
+                <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
+                  <Card className="shadow-lg border-0">
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <span className="text-2xl">📖</span>
+                        <h3 className="text-lg sm:text-xl font-bold text-purple-800">What's the Deal?</h3>
+                      </div>
+                      <p className="text-base sm:text-lg text-gray-700 leading-relaxed">{lesson.content.explanation}</p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+
+                {/* Rule */}
+                {lesson.content.rule && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.4 }}
+                  >
+                    <Card className="shadow-lg border-0 bg-gradient-to-r from-blue-50 to-cyan-50">
+                      <CardContent className="p-4 sm:p-6">
+                        <div className="flex items-center gap-3 mb-4">
+                          <span className="text-2xl">⚖️</span>
+                          <h3 className="text-lg sm:text-xl font-bold text-blue-800">The Golden Rule</h3>
+                        </div>
+                        <p className="text-base sm:text-lg font-semibold text-blue-700 bg-white/80 p-4 rounded-lg border border-blue-200">
+                          {lesson.content.rule}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                )}
+
+                {/* Examples */}
+                {lesson.content.examples && lesson.content.examples.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.6 }}
+                  >
+                    <Card className="shadow-lg border-0">
+                      <CardContent className="p-4 sm:p-6">
+                        <div className="flex items-center gap-3 mb-4">
+                          <span className="text-2xl">💡</span>
+                          <h3 className="text-lg sm:text-xl font-bold text-green-800">
+                            Examples That Actually Make Sense
+                          </h3>
+                        </div>
+                        <div className="space-y-4">
+                          {lesson.content.examples.map((example, index) => (
+                            <div
+                              key={index}
+                              className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200"
+                            >
+                              <div className="grid gap-4 lg:grid-cols-2">
+                                <div className="space-y-2">
+                                  <div className="flex items-start gap-2">
+                                    <span className="text-green-600 font-bold text-sm">✅ CORRECT:</span>
+                                    <span className="font-semibold text-green-800 text-sm break-words">
+                                      "{example.correct}"
+                                    </span>
+                                  </div>
+                                  <div className="flex items-start gap-2">
+                                    <span className="text-red-600 font-bold text-sm">❌ WRONG:</span>
+                                    <span className="font-semibold text-red-800 line-through text-sm break-words">
+                                      "{example.wrong}"
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="bg-white/80 p-3 rounded-lg">
+                                  <span className="text-sm font-medium text-gray-700">💭 Why: {example.why}</span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                )}
+
+                {/* Meme Trick */}
+                <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.8 }}>
+                  <Card className="shadow-lg border-0 bg-gradient-to-r from-yellow-50 to-amber-50">
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <span className="text-2xl">🎭</span>
+                        <h3 className="text-lg sm:text-xl font-bold text-yellow-800">Meme Memory Trick</h3>
+                      </div>
+                      <p className="text-base sm:text-lg font-medium text-yellow-700 bg-white/80 p-4 rounded-lg border border-yellow-200 italic">
+                        {lesson.content.memeTrick}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+
+                {/* Pro Tip */}
+                <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 1.0 }}>
+                  <Card className="shadow-lg border-0 bg-gradient-to-r from-indigo-50 to-purple-50">
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <span className="text-2xl">🎯</span>
+                        <h3 className="text-lg sm:text-xl font-bold text-indigo-800">Pro Tip</h3>
+                      </div>
+                      <p className="text-base sm:text-lg text-indigo-700 bg-white/80 p-4 rounded-lg border border-indigo-200">
+                        {lesson.content.proTip}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+
+                {/* Fun Fact */}
+                {lesson.content.funFact && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 1.2 }}
+                  >
+                    <Card className="shadow-lg border-0 bg-gradient-to-r from-pink-50 to-rose-50">
+                      <CardContent className="p-4 sm:p-6">
+                        <div className="flex items-center gap-3 mb-4">
+                          <span className="text-2xl">🤯</span>
+                          <h3 className="text-lg sm:text-xl font-bold text-pink-800">Mind-Blowing Fun Fact</h3>
+                        </div>
+                        <p className="text-base sm:text-lg text-pink-700 bg-white/80 p-4 rounded-lg border border-pink-200">
+                          {lesson.content.funFact}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                )}
+
+                {/* Navigation */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.4 }}
+                  className="flex flex-col sm:flex-row gap-4 justify-center pt-6"
+                >
+                  <Button onClick={() => setSelectedLesson(null)} variant="outline" className="px-8">
+                    <ArrowLeft className="w-4 h-4 mr-2" /> Back to Lessons
+                  </Button>
+                  <Button onClick={() => setGameState("start")} className="px-8">
+                    Take the Quiz! 🚀
+                  </Button>
+                </motion.div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      )
+    }
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4">
+        <div className="max-w-6xl mx-auto">
+          {/* Home Button - Fixed Position */}
+          <div className="fixed top-4 left-4 z-10">
+            <Button variant="outline" onClick={() => setGameState("start")} className="shadow-lg">
+              <Home className="w-4 h-4 mr-2" />
+              <span className="hidden sm:inline">Home</span>
+            </Button>
+          </div>
+
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+            {/* Header */}
+            <Card className="shadow-xl border-0 mb-8 mt-16 sm:mt-6">
+              <CardHeader className="text-center pb-4">
+                <div className="flex items-center justify-center gap-3">
+                  <span className="text-3xl sm:text-4xl">🎓</span>
+                  <CardTitle className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                    Grammar Learning Hub
+                  </CardTitle>
+                  <span className="text-3xl sm:text-4xl">📚</span>
+                </div>
+                <CardDescription className="text-lg sm:text-xl">
+                  Master the art of writing with our meme-powered grammar lessons! 🚀
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            {/* Lessons Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {allLessons.map((lesson, index) => (
+                <motion.div
+                  key={lesson.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 + 0.2 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Card
+                    className="shadow-lg border-0 cursor-pointer hover:shadow-xl transition-all duration-300 h-full"
+                    onClick={() => setSelectedLesson(lesson.id)}
+                  >
+                    <CardContent className="p-4 sm:p-6 flex flex-col h-full">
+                      <div className="text-center mb-4">
+                        <div className="text-4xl sm:text-5xl mb-3">{lesson.emoji}</div>
+                        <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2">{lesson.title}</h3>
+                        <Badge
+                          variant={
+                            lesson.difficulty === "Beginner"
+                              ? "default"
+                              : lesson.difficulty === "Intermediate"
+                                ? "secondary"
+                                : "destructive"
+                          }
+                          className="text-sm"
+                        >
+                          {lesson.difficulty}
+                        </Badge>
+                      </div>
+
+                      <div className="flex-1 flex items-end">
+                        <Button className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600">
+                          Start Learning! 🚀
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Fun Stats */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 }}
+              className="mt-8"
+            >
+              <Card className="shadow-lg border-0 bg-gradient-to-r from-orange-50 to-red-50">
+                <CardContent className="p-4 sm:p-6 text-center">
+                  <div className="flex items-center justify-center gap-2 mb-4">
+                    <span className="text-2xl sm:text-3xl">🔥</span>
+                    <h3 className="text-xl sm:text-2xl font-bold text-orange-800">Why Learn Grammar?</h3>
+                    <span className="text-2xl sm:text-3xl">🔥</span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                    <div className="bg-white/80 p-4 rounded-lg">
+                      <div className="text-2xl mb-2">💼</div>
+                      <p className="text-sm font-semibold text-orange-700">
+                        Better job prospects - employers notice good grammar!
+                      </p>
+                    </div>
+                    <div className="bg-white/80 p-4 rounded-lg">
+                      <div className="text-2xl mb-2">🧠</div>
+                      <p className="text-sm font-semibold text-orange-700">
+                        Clearer thinking - good grammar = organized thoughts!
+                      </p>
+                    </div>
+                    <div className="bg-white/80 p-4 rounded-lg">
+                      <div className="text-2xl mb-2">😎</div>
+                      <p className="text-sm font-semibold text-orange-700">
+                        Instant credibility - sound smarter in every conversation!
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </motion.div>
+        </div>
+      </div>
+    )
+  }
+
+  return null
 }

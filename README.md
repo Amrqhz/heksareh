@@ -3,7 +3,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400..700&display=swap" rel="stylesheet">
 
 <div align="center">
-  <h1 style="font-size: 15em;font-family: 'Noto Nastaliq Urdu', serif; text-align:center;">هـ</h1>
+  <h1 style="font-size: 8em;font-family: 'Noto Nastaliq Urdu', serif; text-align:center;">هـ</h1>
 </div>
 
 
