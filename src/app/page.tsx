@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { Trophy, Twitter, Instagram, Sparkles, Brain, Zap, ArrowLeft, Home } from "lucide-react"
+import { Trophy, Twitter, Instagram, Sparkles, Brain, Zap, ArrowLeft, Home, Send, Github } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
 interface Question {
@@ -37,60 +37,78 @@ interface LearningContent {
 const questions: Question[] = [
   {
     id: 1,
-    question: "Which sentence is grammatically correct?",
+    question: "کدام جمله استفاده درستی از 'ه' و 'اِ' دارد؟",
     options: [
-      "Me and my friend went to the store",
-      "My friend and I went to the store",
-      "My friend and me went to the store",
-      "I and my friend went to the store",
+      "کتابه علی روی میز است",
+      "کتابِ علی روی میز است",
+      "کتاب علی روی میز است",
+      "کتاب ِ علی روی میز است",
     ],
     correct: 1,
-    explanation: "Always put the other person first, and use 'I' as the subject!",
+    explanation: "در اضافه، از 'اِ' (کسره) استفاده می‌شود: کتابِ علی. 'ه' فقط در انتهای کلمه برای تأکید یا در گفتار محلی به کار می‌رود!",
   },
   {
     id: 2,
-    question: "What's the correct use of 'your' vs 'you're'?",
-    options: ["Your going to love this!", "You're dog is so cute!", "You're going to love this!", "Your welcome!"],
-    correct: 2,
-    explanation: "You're = You are. Your = possessive. Easy peasy!",
+    question: "در کدام جمله استفاده از 'ه' درست است؟",
+    options: [
+      "خونه بزرگی داریم",
+      "خانه بزرگی داریم",
+      "خانه بزرگی داریم",
+      "خونِ بزرگی داریم",
+    ],
+    correct: 1,
+    explanation: "در نوشتار رسمی، 'خانه' با 'ه' نوشته می‌شود. 'خونه' شکل محاوره‌ای است!",
   },
   {
     id: 3,
-    question: "Which is the proper comma usage?",
+    question: "کدام نوشتار برای اضافه درست است؟",
     options: [
-      "I went to the store, and bought milk bread and eggs",
-      "I went to the store and bought milk, bread, and eggs",
-      "I went to the store and bought milk bread, and eggs",
-      "I went to the store, and bought milk, bread and eggs",
+      "ماشینه پدرم",
+      "ماشین پدرم",
+      "ماشینِ پدرم",
+      "ماشین ِ پدرم",
     ],
-    correct: 1,
-    explanation: "The Oxford comma saves lives: 'Let's eat, Grandma!' vs 'Let's eat Grandma!'",
+    correct: 2,
+    explanation: "در اضافه، کسره (اِ) به انتهای کلمه اول چسبیده می‌شود: ماشینِ پدرم!",
   },
   {
     id: 4,
-    question: "What's wrong with this sentence: 'Between you and I, this is secret.'",
+    question: "کدام جمله از نظر استفاده 'ه' و 'اِ' درست است؟",
     options: [
-      "Nothing, it's perfect",
-      "Should be 'Between you and me'",
-      "Should be 'Among you and I'",
-      "Should be 'Between yourself and I'",
+      "دختره خوبی است",
+      "دخترِ خوبی است",
+      "دختر خوبی است",
+      "دختر ِ خوبی است",
     ],
-    correct: 1,
-    explanation: "After prepositions like 'between', use object pronouns (me, not I)!",
+    correct: 2,
+    explanation: "وقتی صفت مستقیماً بعد از اسم می‌آید، نیازی به اضافه نیست: 'دختر خوبی است'!",
   },
   {
     id: 5,
-    question: "Which sentence uses 'affect' correctly?",
+    question: "در کدام مورد استفاده 'ه' اشتباه است؟",
     options: [
-      "The rain will effect our picnic plans",
-      "The rain will affect our picnic plans",
-      "The affect of rain on our picnic",
-      "Rain has a good affect on plants",
+      "این خانه قشنگ است",
+      "رفته بودم مدرسه",
+      "همه کودکان آمدند",
+      "کجا رفته؟",
     ],
     correct: 1,
-    explanation: "Affect = verb (to influence), Effect = noun (result) A for Action, E for End result!",
+    explanation: "در 'رفته بودم مدرسه' باید بگوییم 'به مدرسه رفته بودم' یا 'مدرسه رفته بودم' (بدون ه)!",
+  },
+  {
+    id: 6,
+    question: "هکسره (ه و اِ) در کدام جمله به درستی استفاده شده؟",
+    options: [
+      "برادره کوچیکم",
+      "برادرِ کوچکم",
+      "برادر کوچکم",
+      "برادر ِ کوچکم",
+    ],
+    correct: 1,
+    explanation: "در اضافه، از کسره (اِ) استفاده می‌شود: برادرِ کوچکم. هکسره یعنی تشخیص درست 'ه' و 'اِ'!",
   },
 ]
+
 
 const correctMessages = [
   "🎉 Yasss! You're a grammar guru!",
@@ -173,6 +191,58 @@ const getLearningContent = (questionId: number): LearningContent => {
     }
   )
 }
+
+const MinimalFooter = () => {
+  return (
+    <footer className="mt-20 mb-8">
+      {/* Main Footer */}
+      <div className="max-w-4xl mx-auto px-4">
+        {/* Social Links */}
+        <div className="flex items-center justify-center gap-4 sm:gap-8 mb-8">
+          <a
+            href="https://twitter.com/amrqhz"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-2xl bg-stone-100 hover:bg-stone-200 transition-all duration-300 hover:scale-105"
+          >
+            <Twitter className="w-4 h-4 sm:w-5 sm:h-5 text-stone-600 group-hover:text-stone-800" />
+            <span className="text-stone-700 font-medium text-sm sm:text-base">Twitter</span>
+          </a>
+
+          <a
+            href="https://github.com/amrqhz"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-2xl bg-stone-100 hover:bg-stone-200 transition-all duration-300 hover:scale-105"
+          >
+            <Github className="w-4 h-4 sm:w-5 sm:h-5 text-stone-600 group-hover:text-stone-800" />
+            <span className="text-stone-700 font-medium text-sm sm:text-base">GitHub</span>
+          </a>
+
+          <a
+            href="https://t.me/amrqhz"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-2xl bg-stone-100 hover:bg-stone-200 transition-all duration-300 hover:scale-105"
+          >
+            <Send className="w-4 h-4 sm:w-5 sm:h-5 text-stone-600 group-hover:text-stone-800" />
+            <span className="text-stone-700 font-medium text-sm sm:text-base">Telegram</span>
+          </a>
+        </div>
+
+        {/* Divider */}
+        <div className="w-30 h-px bg-stone-400 mx-auto mb-8"></div>
+
+        {/* Bottom text */}
+        <div className="text-center space-y-2">
+          <p className="text-stone-500 text-sm">Made with care for grammar learners</p>
+          <p className="text-stone-400 text-xs">© 2025 • amrqhz</p>
+        </div>
+      </div>
+    </footer>
+  )
+}
+
 
 export default function WritingSkillsQuiz() {
   const [gameState, setGameState] = useState<"start" | "quiz" | "results" | "leaderboard" | "learning">("start")
@@ -451,31 +521,20 @@ export default function WritingSkillsQuiz() {
   if (gameState === "start") {
     return (
       <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-100 to-rose-100 flex items-center justify-center p-4">
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-md"
-        >
           <Card className="shadow-2xl border-0">
             <CardHeader className="text-center space-y-4">
-              <motion.div
-                animate={{ rotate: [0, 10, -10, 0] }}
-                transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
-              >
-                <Brain className="w-16 h-16 mx-auto text-amber-600" />
-              </motion.div>
-              <CardTitle className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-amber-700 to-orange-700 bg-clip-text text-transparent">
-                Writing Skills Quiz
+                <img src="./h2.png" alt=""  className="mx-auto block"/>
+              <CardTitle className="text-2xl sm:text-3xl font-bold bg-clip-text ">
+                Are you Persian?
               </CardTitle>
               <CardDescription className="text-base sm:text-lg">
-                Test your grammar knowledge and become a writing wizard! ✨
+                ✨
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-2">
+              <div className="space-y-4">
                 <label htmlFor="name" className="text-sm font-medium">
-                  What's your name, future grammar guru?
+                  اسمت چیه فردوسی زمانه؟ 
                 </label>
                 <Input
                   id="name"
@@ -505,7 +564,6 @@ export default function WritingSkillsQuiz() {
               </div>
             </CardContent>
           </Card>
-        </motion.div>
       </div>
     )
   }
@@ -889,7 +947,7 @@ export default function WritingSkillsQuiz() {
       </div>
     )
   }
-
+  
   if (gameState === "leaderboard") {
     return (
       <div className="min-h-screen bg-gradient-to-br from-neutral-100 via-stone-50 to-rose-50 p-4">
@@ -1162,6 +1220,7 @@ export default function WritingSkillsQuiz() {
         </div>
       )
     }
+      
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4">
@@ -1170,23 +1229,18 @@ export default function WritingSkillsQuiz() {
           <div className="fixed top-4 left-4 z-10">
             <Button variant="outline" onClick={() => setGameState("start")} className="shadow-lg">
               <Home className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">Home</span>
             </Button>
           </div>
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             {/* Header */}
-            <Card className="shadow-xl border-0 mb-8 mt-16 sm:mt-6">
+            <Card className="shadow-xl border-0 mb-8 mt-16 sm:mt-6 max-w-3xl mx-auto">
               <CardHeader className="text-center pb-4">
                 <div className="flex items-center justify-center gap-3">
-                  <span className="text-3xl sm:text-4xl">🎓</span>
-                  <CardTitle className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                    Grammar Learning Hub
-                  </CardTitle>
-                  <span className="text-3xl sm:text-4xl">📚</span>
+                  <img src="./h2.png" alt="" />
                 </div>
                 <CardDescription className="text-lg sm:text-xl">
-                  Master the art of writing with our meme-powered grammar lessons! 🚀
+                   هنر نوشتن فارسی با هکسره‌
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -1223,10 +1277,9 @@ export default function WritingSkillsQuiz() {
                           {lesson.difficulty}
                         </Badge>
                       </div>
-
                       <div className="flex-1 flex items-end">
-                        <Button className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600">
-                          Start Learning! 🚀
+                        <Button className="w-full bg-gradient-to-r from-grey-300 to-black hover:from-indigo-600 hover:to-purple-600">
+                          شروع کنیم؟ 🚀
                         </Button>
                       </div>
                     </CardContent>
@@ -1244,39 +1297,38 @@ export default function WritingSkillsQuiz() {
             >
               <Card className="shadow-lg border-0 bg-gradient-to-r from-orange-50 to-red-50">
                 <CardContent className="p-4 sm:p-6 text-center">
+
                   <div className="flex items-center justify-center gap-2 mb-4">
                     <span className="text-2xl sm:text-3xl">🔥</span>
-                    <h3 className="text-xl sm:text-2xl font-bold text-orange-800">Why Learn Grammar?</h3>
+                    <h3 className="text-xl sm:text-2xl font-bold text-orange-800">چرا هکسره؟</h3>
                     <span className="text-2xl sm:text-3xl">🔥</span>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                     <div className="bg-white/80 p-4 rounded-lg">
-                      <div className="text-2xl mb-2">💼</div>
-                      <p className="text-sm font-semibold text-orange-700">
-                        Better job prospects - employers notice good grammar!
+                      <p className="text-sm font-semibold text-gray-900">
+                        فرصت‌های شغلی بهتر - کارفرمایان به دستور زبان خوب توجه می‌کنند
                       </p>
                     </div>
                     <div className="bg-white/80 p-4 rounded-lg">
-                      <div className="text-2xl mb-2">🧠</div>
-                      <p className="text-sm font-semibold text-orange-700">
-                        Clearer thinking - good grammar = organized thoughts!
+                      <p className="text-sm font-semibold text-gray-900">
+                        تفکر واضح‌تر - هکسره درست = اندیشه‌های منظم
                       </p>
                     </div>
                     <div className="bg-white/80 p-4 rounded-lg">
-                      <div className="text-2xl mb-2">😎</div>
-                      <p className="text-sm font-semibold text-orange-700">
-                        Instant credibility - sound smarter in every conversation!
+                      <p className="text-sm font-semibold text-gray-900">
+                        اعتبار فوری - در هر گفتگویی باهوش‌تر به نظر برسید
                       </p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </motion.div>
+            <MinimalFooter />
           </motion.div>
         </div>
       </div>
     )
   }
-
+  
   return null
 }
