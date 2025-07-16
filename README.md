@@ -1,11 +1,5 @@
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400..700&display=swap" rel="stylesheet">
 
-<div align="center">
-  <h1 style="font-size: 8em;font-family: 'Noto Nastaliq Urdu', serif; text-align:center;">هـ</h1>
-</div>
-
+<div align= center><img src="./public/h2.png""></div>
 
 
 
